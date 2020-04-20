@@ -33,6 +33,7 @@ allprojects {
         mavenCentral()
         jcenter()
         google()
+        maven { url 'https://jitpack.io' }
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }
@@ -62,5 +63,6 @@ project(":core") {
         api "io.github.libktx:ktx-collections:$ktxVersion"
         api "io.github.libktx:ktx-graphics:$ktxVersion"
         api "io.github.libktx:ktx-assets:$ktxVersion"
+        implementation 'com.github.bhlangonijr:chesslib:1.1.13'
     }
 }

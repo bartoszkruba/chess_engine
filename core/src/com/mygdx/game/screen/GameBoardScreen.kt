@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.Array
+import com.github.bhlangonijr.chesslib.Board
+import com.github.bhlangonijr.chesslib.Square
+import com.github.bhlangonijr.chesslib.move.Move
 import com.mygdx.game.Game
 import com.mygdx.game.SQUARE_SIZE
 import com.mygdx.game.assets.Textures
@@ -14,6 +17,7 @@ import com.mygdx.game.model.*
 import ktx.app.KtxScreen
 import ktx.collections.iterate
 import ktx.graphics.use
+import java.lang.Exception
 
 class GameBoardScreen(val game: Game) : KtxScreen {
     private val textures = Textures(game.assets)
@@ -28,8 +32,12 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private var selectedPiece: BoardSquare? = null
     private val selectedPieceInitialPosition = Vector2()
 
+    private val validationBoard = Board()
     private val board = createBoard()
     private val pieces = initializePieces()
+
+    private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
+            7 to "G", 8 to "H")
 
     override fun render(delta: Float) {
         super.render(delta)
@@ -71,6 +79,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
 
                 if (moveCanBePerformed(selectedPieceInitialPosition, position)) {
                     normalizePosition(position)
+                    validationBoard.doMove(Move(positionToSquare(selectedPieceInitialPosition), positionToSquare(position)))
                     selectedPiece?.x = position.x
                     selectedPiece?.y = position.y
                 } else {
@@ -88,14 +97,23 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     private fun moveCanBePerformed(from: Vector2, to: Vector2): Boolean {
-        val found = findPiece(to)
-        return found == null || (found == selectedPiece)
+        return try {
+            val initial = positionToSquare(from)
+            val new = positionToSquare(to)
+            validationBoard.isMoveLegal(Move(initial, new), true)
+        } catch (ex: Exception) {
+            false
+        }
     }
 
     private fun findPiece(position: Vector2): BoardSquare? = pieces.find { boardSquare ->
         (position.x > boardSquare.x && position.x < boardSquare.x + SQUARE_SIZE &&
                 position.y > boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE)
     }
+
+    private fun positionToSquare(position: Vector2) = Square.fromValue(
+            (numberToLetter[((position.x / SQUARE_SIZE).toInt() + 1)] +
+                    ((position.y / SQUARE_SIZE).toInt() + 1)))
 
     private fun renderBoard(batch: SpriteBatch) = board.iterate { square, _ -> square.draw(batch) }
 
