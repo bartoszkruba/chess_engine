@@ -66,18 +66,36 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 selectedPiece?.x = selectedPieceInitialPosition.x - deltaX
             } else {
                 wasLeftMousePressed = false
-                selectedPiece?.y = selectedPieceInitialPosition.y
-                selectedPiece?.x = selectedPieceInitialPosition.x
+
+                val position = mousePosition
+
+                if (moveCanBePerformed(selectedPieceInitialPosition, position)) {
+                    normalizePosition(position)
+                    selectedPiece?.x = position.x
+                    selectedPiece?.y = position.y
+                } else {
+                    selectedPiece?.y = selectedPieceInitialPosition.y
+                    selectedPiece?.x = selectedPieceInitialPosition.x
+                }
                 selectedPiece = null
             }
         }
+    }
+
+    private fun normalizePosition(position: Vector2) {
+        position.x = (position.x / SQUARE_SIZE).toInt() * SQUARE_SIZE
+        position.y = (position.y / SQUARE_SIZE).toInt() * SQUARE_SIZE
+    }
+
+    private fun moveCanBePerformed(from: Vector2, to: Vector2): Boolean {
+        val found = findPiece(to)
+        return found == null || (found == selectedPiece)
     }
 
     private fun findPiece(position: Vector2): BoardSquare? = pieces.find { boardSquare ->
         (position.x > boardSquare.x && position.x < boardSquare.x + SQUARE_SIZE &&
                 position.y > boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE)
     }
-
 
     private fun renderBoard(batch: SpriteBatch) = board.iterate { square, _ -> square.draw(batch) }
 
