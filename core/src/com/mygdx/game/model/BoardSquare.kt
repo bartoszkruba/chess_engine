@@ -23,5 +23,5 @@ abstract class BoardSquare(x: Float, y: Float, val sprite: Sprite) {
             sprite.setPosition(x, value)
         }
 
-    public fun draw(batch: SpriteBatch) = sprite.draw(batch)
+    fun draw(batch: SpriteBatch) = sprite.draw(batch)
 }

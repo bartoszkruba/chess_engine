@@ -11,7 +11,7 @@ import com.mygdx.game.screen.LoadingScreen
 class Game : KtxGame<KtxScreen>() {
 
     val batch by lazy { SpriteBatch() }
-    val font by lazy { BitmapFont() }
+    val font by lazy { BitmapFont().apply { data.setScale(2f) } }
     val assets by lazy { AssetManager() }
 
     override fun create() {
