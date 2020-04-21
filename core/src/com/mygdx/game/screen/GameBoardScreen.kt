@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.Array
 import com.github.bhlangonijr.chesslib.Board
 import com.github.bhlangonijr.chesslib.Square
 import com.github.bhlangonijr.chesslib.move.Move
+import com.github.bhlangonijr.chesslib.move.MoveGenerator
 import com.mygdx.game.Game
 import com.mygdx.game.SQUARE_SIZE
 import com.mygdx.game.assets.Textures
@@ -35,9 +36,12 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val validationBoard = Board()
     private val board = createBoard()
     private val pieces = initializePieces()
+    private val possibleMoves = Array<PossibleMove>()
 
     private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
             7 to "G", 8 to "H")
+    private val letterToNumber = hashMapOf("A" to 1, "B" to 2, "C" to 3, "D" to 4, "E" to 5, "F" to 6,
+            "G" to 7, "H" to 8)
 
     override fun render(delta: Float) {
         super.render(delta)
@@ -48,6 +52,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         game.batch.projectionMatrix = camera.combined
         game.batch.use {
             renderBoard(it)
+            renderPossibleMoves(it)
             renderPieces(it)
         }
     }
@@ -62,6 +67,13 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 selectedPieceInitialPosition.x = piece.x
                 selectedPiece = piece
 
+                val square = positionToSquare(Vector2(selectedPiece!!.x, selectedPiece!!.y))
+                MoveGenerator.generateLegalMoves(validationBoard)
+                        .filter { it.from == square }
+                        .map { squareToPosition(it.to) }
+                        .map { PossibleMove(it.x, it.y, textures) }
+                        .forEach { possibleMoves.add(it) }
+
                 mouseInitialPosition.y = mousePosition.y
                 mouseInitialPosition.x = mousePosition.x
             }
@@ -73,6 +85,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 selectedPiece?.y = selectedPieceInitialPosition.y - deltaY
                 selectedPiece?.x = selectedPieceInitialPosition.x - deltaX
             } else {
+                possibleMoves.clear()
                 wasLeftMousePressed = false
 
                 val position = mousePosition
@@ -115,9 +128,20 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             (numberToLetter[((position.x / SQUARE_SIZE).toInt() + 1)] +
                     ((position.y / SQUARE_SIZE).toInt() + 1)))
 
+    private fun squareToPosition(square: Square): Vector2 {
+        println(square.toString())
+        val letter = square.toString()[0].toString()
+        val number = square.toString()[1].toString().toInt()
+        val x = ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
+        val y = (number - 1) * SQUARE_SIZE
+        return Vector2(x, y)
+    }
+
     private fun renderBoard(batch: SpriteBatch) = board.iterate { square, _ -> square.draw(batch) }
 
     private fun renderPieces(batch: SpriteBatch) = pieces.iterate { piece, _ -> piece.draw(batch) }
+
+    private fun renderPossibleMoves(batch: SpriteBatch) = possibleMoves.iterate { move, _ -> move.draw(batch) }
 
     private fun createBoard(): Array<BoardSquare> {
         val board = Array<BoardSquare>()
