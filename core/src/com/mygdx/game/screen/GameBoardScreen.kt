@@ -102,17 +102,17 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             } else {
                 possibleMoves.clear()
                 wasLeftMousePressed = false
-
                 val position = mousePosition
                 normalizePosition(position)
-
-                val move = Move(positionToSquare(selectedPieceInitialPosition), positionToSquare(position))
-                if (MoveGenerator.generateLegalMoves(validationBoard).contains(move)) {
-                    validationBoard.doMove(move)
-                    selectedPiece?.x = position.x
-                    selectedPiece?.y = position.y
-                    findPiece(selectedPiece!!)?.let { pieces.removeIndex(pieces.indexOf(it)) }
-                } else {
+                try {
+                    val move = Move(positionToSquare(selectedPieceInitialPosition), positionToSquare(position))
+                    if (MoveGenerator.generateLegalMoves(validationBoard).contains(move)) {
+                        validationBoard.doMove(move)
+                        selectedPiece?.x = position.x
+                        selectedPiece?.y = position.y
+                        findPiece(selectedPiece!!)?.let { pieces.removeIndex(pieces.indexOf(it)) }
+                    } else throw RuntimeException()
+                } catch (ex: Exception) {
                     selectedPiece?.y = selectedPieceInitialPosition.y
                     selectedPiece?.x = selectedPieceInitialPosition.x
                 }
