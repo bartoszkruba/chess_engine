@@ -3,9 +3,7 @@ package com.mygdx.game.screen
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -28,7 +26,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val textures = Textures(game.assets)
 
     private val camera = OrthographicCamera().apply {
-        setToOrtho(false, 9 * SQUARE_SIZE, 9 * SQUARE_SIZE)
+        setToOrtho(false, 12 * SQUARE_SIZE, 9 * SQUARE_SIZE)
         position.x -= SQUARE_SIZE / 2f
         position.y -= SQUARE_SIZE / 2f
         update()
@@ -55,7 +53,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val background = Sprite(textures.lightSquareTexture).apply {
         x = -SQUARE_SIZE
         y = -SQUARE_SIZE
-        setSize(10 * SQUARE_SIZE, 10 * SQUARE_SIZE)
+        setSize(13 * SQUARE_SIZE, 10 * SQUARE_SIZE)
     }
 
     override fun render(delta: Float) {
