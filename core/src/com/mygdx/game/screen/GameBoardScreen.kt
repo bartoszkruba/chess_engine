@@ -22,7 +22,6 @@ import ktx.app.KtxScreen
 import ktx.collections.iterate
 import ktx.graphics.use
 import org.apache.commons.lang3.time.StopWatch
-import java.util.concurrent.TimeUnit
 
 class GameBoardScreen(val game: Game) : KtxScreen {
 
@@ -49,6 +48,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
     private val stopwatch = StopWatch.createStarted()
+    private var gameStatus = GameStatus.NONE
 
     private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
             7 to "G", 8 to "H")
@@ -63,7 +63,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
 
     override fun render(delta: Float) {
         getMousePosInGameWorld()
-        processControls()
+        if (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK) processControls()
 
         game.batch.projectionMatrix = camera.combined
         game.batch.use {
@@ -73,6 +73,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             renderBoardEnumeration(it)
             renderTurnCounter(it)
             renderTime(it)
+            renderStatus(it)
         }
         renderBoardBoundary(game.batch)
         renderTurnColor(game.batch)
@@ -120,6 +121,13 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                         selectedPiece?.x = position.x
                         selectedPiece?.y = position.y
                         findPiece(selectedPiece!!)?.let { pieces.removeIndex(pieces.indexOf(it)) }
+                        gameStatus = when {
+                            validationBoard.isMated -> GameStatus.CHECK_MATE
+                            validationBoard.isDraw -> GameStatus.DRAW
+                            validationBoard.isStaleMate -> GameStatus.STALE_MATE
+                            validationBoard.isKingAttacked -> GameStatus.CHECK
+                            else -> GameStatus.NONE
+                        }
                     } else throw RuntimeException()
                 } catch (ex: Exception) {
                     selectedPiece?.y = selectedPieceInitialPosition.y
@@ -198,6 +206,13 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 7.5f * SQUARE_SIZE)
     }
 
+    private fun renderStatus(batch: SpriteBatch) {
+        if (gameStatus != GameStatus.NONE) {
+            val status = gameStatus.name
+            game.font.draw(batch, status, 9.15f * SQUARE_SIZE, 7f * SQUARE_SIZE)
+        }
+    }
+
     private fun renderBoardEnumeration(batch: SpriteBatch) {
         for (i in 0 until 8) {
             game.font.draw(batch, numberToLetter[i + 1], SQUARE_SIZE / 2f - 13f + i * SQUARE_SIZE, -15f)
@@ -274,5 +289,9 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         val position = camera.unproject(Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f))
         mousePosition.x = position.x
         mousePosition.y = position.y
+    }
+
+    private enum class GameStatus {
+        NONE, CHECK, CHECK_MATE, DRAW, STALE_MATE
     }
 }
