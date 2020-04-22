@@ -84,8 +84,10 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 MoveGenerator.generateLegalMoves(validationBoard)
                         .filter { it.from == square }
                         .map { squareToPosition(it.to) }
-                        .map { PossibleMove(it.x, it.y, textures) }
-                        .forEach { possibleMoves.add(it) }
+                        .map {
+                            if (findPiece(it) != null) PossibleMove(it.x, it.y, textures, true)
+                            else PossibleMove(it.x, it.y, textures, false)
+                        }.forEach { possibleMoves.add(it) }
 
                 mouseInitialPosition.y = mousePosition.y
                 mouseInitialPosition.x = mousePosition.x
@@ -125,8 +127,8 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     private fun findPiece(position: Vector2): BoardSquare? = pieces.find { boardSquare ->
-        (position.x > boardSquare.x && position.x < boardSquare.x + SQUARE_SIZE &&
-                position.y > boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE)
+        (position.x >= boardSquare.x && position.x < boardSquare.x + SQUARE_SIZE &&
+                position.y >= boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE)
     }
 
     private fun findPiece(position: BoardSquare): BoardSquare? = pieces.find { boardSquare ->
