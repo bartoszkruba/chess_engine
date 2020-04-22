@@ -68,9 +68,9 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             renderBoard(it)
             renderPossibleMoves(it)
             renderBoardEnumeration(it)
-            renderPieces(it)
         }
         renderBoardBoundary(game.batch)
+        game.batch.use { renderPieces(it) }
     }
 
     private fun processControls() {
@@ -183,7 +183,10 @@ class GameBoardScreen(val game: Game) : KtxScreen {
 
     private fun renderBoard(batch: SpriteBatch) = board.iterate { square, _ -> square.draw(batch) }
 
-    private fun renderPieces(batch: SpriteBatch) = pieces.iterate { piece, _ -> piece.draw(batch) }
+    private fun renderPieces(batch: SpriteBatch) {
+        pieces.iterate { piece, _ -> if (piece != selectedPiece) piece.draw(batch) }
+        selectedPiece?.draw(batch)
+    }
 
     private fun renderPossibleMoves(batch: SpriteBatch) = possibleMoves.iterate { move, _ -> move.draw(batch) }
 
