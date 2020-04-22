@@ -63,7 +63,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        if(!gameBoardFlipped) flipGameBoard()
+        if (!gameBoardFlipped) flipGameBoard()
 
         getMousePosInGameWorld()
         if (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK) processControls()
@@ -83,8 +83,15 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         game.batch.use { renderPieces(it) }
     }
 
-    private fun flipGameBoard(){
-        gameBoardFlipped =! gameBoardFlipped
+    private fun flipGameBoard() {
+        gameBoardFlipped = !gameBoardFlipped
+
+        pieces.iterate { piece, _ ->
+            val square = positionToSquare(Vector2(piece.x, piece.y), false)
+            val newPosition = squareToPosition(square)
+            piece.x = newPosition.x
+            piece.y = newPosition.y
+        }
     }
 
     private fun processControls() {
@@ -160,16 +167,33 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 position.y >= boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE) && boardSquare != position
     }
 
-    private fun positionToSquare(position: Vector2) = Square.fromValue(
-            (numberToLetter[((position.x / SQUARE_SIZE).toInt() + 1)] +
-                    ((position.y / SQUARE_SIZE).toInt() + 1)))
+    private fun positionToSquare(position: Vector2) = positionToSquare(position, gameBoardFlipped)
 
-    private fun squareToPosition(square: Square): Vector2 {
+    private fun positionToSquare(position: Vector2, gameBoardFlipped: Boolean): Square {
+        return if (gameBoardFlipped) {
+            Square.fromValue(numberToLetter[8 - (position.x / SQUARE_SIZE).toInt()] + (8 -
+                    (position.y / SQUARE_SIZE).toInt()))
+        } else {
+            Square.fromValue((numberToLetter[((position.x / SQUARE_SIZE).toInt() + 1)] +
+                    ((position.y / SQUARE_SIZE).toInt() + 1)))
+        }
+    }
+
+    private fun squareToPosition(square: Square): Vector2 = squareToPosition(square, gameBoardFlipped)
+
+    private fun squareToPosition(square: Square, gameBoardFlipped: Boolean): Vector2 {
         val letter = square.toString()[0].toString()
         val number = square.toString()[1].toString().toInt()
-        val x = ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
-        val y = (number - 1) * SQUARE_SIZE
-        return Vector2(x, y)
+
+        return if (gameBoardFlipped) {
+            val x = 8 * SQUARE_SIZE - ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
+            val y = 8 * SQUARE_SIZE - ((number - 1) * SQUARE_SIZE)
+            Vector2(x, y)
+        } else {
+            val x = ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
+            val y = (number - 1) * SQUARE_SIZE
+            Vector2(x, y)
+        }
     }
 
     private fun renderBoardBoundary(batch: SpriteBatch) {
@@ -236,7 +260,6 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             game.font.draw(batch, "" + (i + 1), -35f, SQUARE_SIZE / 2f + 14f + i * SQUARE_SIZE)
             game.font.draw(batch, "" + (i + 1), 8 * SQUARE_SIZE + 19f, SQUARE_SIZE / 2f + 14f + i * SQUARE_SIZE)
         }
-
     }
 
     private fun renderBoard(batch: SpriteBatch) = board.iterate { square, _ -> square.draw(batch) }
