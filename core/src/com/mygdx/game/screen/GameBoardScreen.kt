@@ -49,7 +49,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private var turn = 1
     private val stopwatch = StopWatch.createStarted()
     private var gameStatus = GameStatus.NONE
-    private var gameBoardFlipped = true
+    private var gameBoardFlipped = false
 
     private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
             7 to "G", 8 to "H")
@@ -63,8 +63,6 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        if (!gameBoardFlipped) flipGameBoard()
-
         getMousePosInGameWorld()
         if (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK) processControls()
 
@@ -84,11 +82,14 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     private fun flipGameBoard() {
+        println("flip gameboard")
         gameBoardFlipped = !gameBoardFlipped
 
         pieces.iterate { piece, _ ->
-            val square = positionToSquare(Vector2(piece.x, piece.y), false)
+            val square = positionToSquare(Vector2(piece.x, piece.y), !gameBoardFlipped)
             val newPosition = squareToPosition(square)
+            println("square: $square")
+            println("new position: $newPosition")
             piece.x = newPosition.x
             piece.y = newPosition.y
         }
@@ -167,9 +168,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 position.y >= boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE) && boardSquare != position
     }
 
-    private fun positionToSquare(position: Vector2) = positionToSquare(position, gameBoardFlipped)
-
-    private fun positionToSquare(position: Vector2, gameBoardFlipped: Boolean): Square {
+    private fun positionToSquare(position: Vector2, gameBoardFlipped: Boolean = this.gameBoardFlipped): Square {
         return if (gameBoardFlipped) {
             Square.fromValue(numberToLetter[8 - (position.x / SQUARE_SIZE).toInt()] + (8 -
                     (position.y / SQUARE_SIZE).toInt()))
@@ -179,15 +178,13 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         }
     }
 
-    private fun squareToPosition(square: Square): Vector2 = squareToPosition(square, gameBoardFlipped)
-
-    private fun squareToPosition(square: Square, gameBoardFlipped: Boolean): Vector2 {
+    private fun squareToPosition(square: Square, gameBoardFlipped: Boolean = this.gameBoardFlipped): Vector2 {
         val letter = square.toString()[0].toString()
         val number = square.toString()[1].toString().toInt()
 
         return if (gameBoardFlipped) {
-            val x = 8 * SQUARE_SIZE - ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
-            val y = 8 * SQUARE_SIZE - ((number - 1) * SQUARE_SIZE)
+            val x = 7 * SQUARE_SIZE - ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
+            val y = 7 * SQUARE_SIZE - ((number - 1) * SQUARE_SIZE)
             Vector2(x, y)
         } else {
             val x = ((letterToNumber[letter]!! - 1) * SQUARE_SIZE)
