@@ -49,6 +49,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private var turn = 1
     private val stopwatch = StopWatch.createStarted()
     private var gameStatus = GameStatus.NONE
+    private var gameBoardFlipped = true
 
     private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
             7 to "G", 8 to "H")
@@ -62,6 +63,8 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     override fun render(delta: Float) {
+        if(!gameBoardFlipped) flipGameBoard()
+
         getMousePosInGameWorld()
         if (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK) processControls()
 
@@ -78,6 +81,10 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         renderBoardBoundary(game.batch)
         renderTurnColor(game.batch)
         game.batch.use { renderPieces(it) }
+    }
+
+    private fun flipGameBoard(){
+        gameBoardFlipped =! gameBoardFlipped
     }
 
     private fun processControls() {
@@ -214,7 +221,14 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     private fun renderBoardEnumeration(batch: SpriteBatch) {
-        for (i in 0 until 8) {
+        if (gameBoardFlipped) for (i in 0 until 8) {
+            game.font.draw(batch, numberToLetter[8 - i], SQUARE_SIZE / 2f - 13f + i * SQUARE_SIZE, -15f)
+            game.font.draw(batch, numberToLetter[8 + -i], SQUARE_SIZE / 2f - 13f + i * SQUARE_SIZE,
+                    8 * SQUARE_SIZE + 40f)
+
+            game.font.draw(batch, "" + (8 - i), -35f, SQUARE_SIZE / 2f + 14f + i * SQUARE_SIZE)
+            game.font.draw(batch, "" + (8 - i), 8 * SQUARE_SIZE + 19f, SQUARE_SIZE / 2f + 14f + i * SQUARE_SIZE)
+        } else for (i in 0 until 8) {
             game.font.draw(batch, numberToLetter[i + 1], SQUARE_SIZE / 2f - 13f + i * SQUARE_SIZE, -15f)
             game.font.draw(batch, numberToLetter[i + 1], SQUARE_SIZE / 2f - 13f + i * SQUARE_SIZE,
                     8 * SQUARE_SIZE + 40f)
@@ -222,6 +236,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             game.font.draw(batch, "" + (i + 1), -35f, SQUARE_SIZE / 2f + 14f + i * SQUARE_SIZE)
             game.font.draw(batch, "" + (i + 1), 8 * SQUARE_SIZE + 19f, SQUARE_SIZE / 2f + 14f + i * SQUARE_SIZE)
         }
+
     }
 
     private fun renderBoard(batch: SpriteBatch) = board.iterate { square, _ -> square.draw(batch) }
