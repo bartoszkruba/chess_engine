@@ -44,6 +44,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val board = createBoard()
     private val pieces = initializePieces()
     private val possibleMoves = Array<PossibleMove>()
+    private var turn = 1
 
     private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
             7 to "G", 8 to "H")
@@ -66,8 +67,10 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             renderBoard(it)
             renderPossibleMoves(it)
             renderBoardEnumeration(it)
+            renderTurnCounter(it)
         }
         renderBoardBoundary(game.batch)
+        renderTurnColor(game.batch)
         game.batch.use { renderPieces(it) }
     }
 
@@ -108,6 +111,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                     val move = Move(positionToSquare(selectedPieceInitialPosition), positionToSquare(position))
                     if (MoveGenerator.generateLegalMoves(validationBoard).contains(move)) {
                         validationBoard.doMove(move)
+                        turn++
                         selectedPiece?.x = position.x
                         selectedPiece?.y = position.y
                         findPiece(selectedPiece!!)?.let { pieces.removeIndex(pieces.indexOf(it)) }
@@ -168,6 +172,20 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 8 * SQUARE_SIZE + SQUARE_SIZE / 2f, 8 * SQUARE_SIZE + SQUARE_SIZE / 2f, 8f)
 
         shapeRenderer.end()
+    }
+
+    private fun renderTurnColor(batch: SpriteBatch) {
+        shapeRenderer.projectionMatrix = batch.projectionMatrix
+        if (turn % 2 == 0) shapeRenderer.color = Color.BLACK
+        else shapeRenderer.color = Color.WHITE
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
+        shapeRenderer.rectLine(8.75f * SQUARE_SIZE, 7.9f * SQUARE_SIZE, 9f * SQUARE_SIZE,
+                7.9f * SQUARE_SIZE, 30f)
+        shapeRenderer.end()
+    }
+
+    private fun renderTurnCounter(batch: SpriteBatch) {
+        game.font.draw(batch, "TURN : $turn", 9.15f * SQUARE_SIZE, 8 * SQUARE_SIZE)
     }
 
     private fun renderBoardEnumeration(batch: SpriteBatch) {
