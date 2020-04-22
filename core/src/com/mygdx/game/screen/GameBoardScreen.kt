@@ -21,8 +21,11 @@ import com.mygdx.game.model.*
 import ktx.app.KtxScreen
 import ktx.collections.iterate
 import ktx.graphics.use
+import org.apache.commons.lang3.time.StopWatch
+import java.util.concurrent.TimeUnit
 
 class GameBoardScreen(val game: Game) : KtxScreen {
+
     private val textures = Textures(game.assets)
 
     private val camera = OrthographicCamera().apply {
@@ -45,6 +48,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val pieces = initializePieces()
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
+    private val stopwatch = StopWatch.createStarted()
 
     private val numberToLetter = hashMapOf(1 to "A", 2 to "B", 3 to "C", 4 to "D", 5 to "E", 6 to "F",
             7 to "G", 8 to "H")
@@ -68,6 +72,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             renderPossibleMoves(it)
             renderBoardEnumeration(it)
             renderTurnCounter(it)
+            renderTime(it)
         }
         renderBoardBoundary(game.batch)
         renderTurnColor(game.batch)
@@ -186,6 +191,11 @@ class GameBoardScreen(val game: Game) : KtxScreen {
 
     private fun renderTurnCounter(batch: SpriteBatch) {
         game.font.draw(batch, "TURN : $turn", 9.15f * SQUARE_SIZE, 8 * SQUARE_SIZE)
+    }
+
+    private fun renderTime(batch: SpriteBatch) {
+        game.font.draw(batch, "TIME : ${stopwatch.formatTime().dropLast(4)}", 9.15f * SQUARE_SIZE,
+                7.5f * SQUARE_SIZE)
     }
 
     private fun renderBoardEnumeration(batch: SpriteBatch) {
