@@ -45,6 +45,12 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val validationBoard = Board()
     private val board = createBoard()
     private val pieces = initializePieces()
+    private val flipBoardButton = Sprite(textures.darkSquareTexture).apply {
+        x = 9.25f * SQUARE_SIZE
+        y = 5.75f * SQUARE_SIZE
+        setSize(1.5f * SQUARE_SIZE, 0.75f * SQUARE_SIZE)
+    }
+
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
     private val stopwatch = StopWatch.createStarted()
@@ -64,7 +70,8 @@ class GameBoardScreen(val game: Game) : KtxScreen {
 
     override fun render(delta: Float) {
         getMousePosInGameWorld()
-        if (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK) processControls()
+        if (!checkBoardFlipControls() && (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK))
+            processControls()
 
         game.batch.projectionMatrix = camera.combined
         game.batch.use {
@@ -75,6 +82,8 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             renderTurnCounter(it)
             renderTime(it)
             renderStatus(it)
+            flipBoardButton.draw(it)
+            game.font.draw(it, "Flip Board", 9.5f * SQUARE_SIZE, 6.25f * SQUARE_SIZE)
         }
         renderBoardBoundary(game.batch)
         renderTurnColor(game.batch)
@@ -82,17 +91,24 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     }
 
     private fun flipGameBoard() {
-        println("flip gameboard")
         gameBoardFlipped = !gameBoardFlipped
 
         pieces.iterate { piece, _ ->
             val square = positionToSquare(Vector2(piece.x, piece.y), !gameBoardFlipped)
             val newPosition = squareToPosition(square)
-            println("square: $square")
-            println("new position: $newPosition")
             piece.x = newPosition.x
             piece.y = newPosition.y
         }
+    }
+
+    private fun checkBoardFlipControls(): Boolean {
+        return if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)
+                && mousePosition.x >= flipBoardButton.x &&
+                mousePosition.x <= flipBoardButton.x + flipBoardButton.width &&
+                mousePosition.y >= flipBoardButton.y && mousePosition.y <= flipBoardButton.y + flipBoardButton.height) {
+            flipGameBoard()
+            true
+        } else false
     }
 
     private fun processControls() {
