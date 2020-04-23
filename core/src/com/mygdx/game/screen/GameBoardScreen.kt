@@ -45,6 +45,9 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private val validationBoard = Board()
     private val board = createBoard()
     private val pieces = initializePieces()
+
+    private val takenWhitePieces = Array<BoardSquare>()
+    private val takenBlackPieces = Array<BoardSquare>()
     private val flipBoardButton = Sprite(textures.darkSquareTexture).apply {
         x = 9.25f * SQUARE_SIZE
         y = 5.75f * SQUARE_SIZE
@@ -79,6 +82,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             renderBoard(it)
             renderPossibleMoves(it)
             renderBoardEnumeration(it)
+            renderTakenPieces(it)
             renderTurnCounter(it)
             renderTime(it)
             renderStatus(it)
@@ -151,7 +155,11 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                         turn++
                         selectedPiece?.x = position.x
                         selectedPiece?.y = position.y
-                        findPiece(selectedPiece!!)?.let { pieces.removeIndex(pieces.indexOf(it)) }
+                        findPiece(selectedPiece!!)?.let {
+                            val index = pieces.indexOf(it)
+                            addToTakenPieces(pieces[index])
+                            pieces.removeIndex(index)
+                        }
                         gameStatus = when {
                             validationBoard.isMated -> GameStatus.CHECK_MATE
                             validationBoard.isDraw -> GameStatus.DRAW
@@ -168,6 +176,48 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             }
         }
     }
+
+    private fun addToTakenPieces(piece: BoardSquare) {
+        var row = 0
+        var column = 0
+        piece.sprite.setSize(0.35f * SQUARE_SIZE, 0.35f * SQUARE_SIZE)
+        if (turn % 2 == 0) {
+            takenWhitePieces.add(piece)
+            takenWhitePieces.sort { o1, o2 -> pieceToValue(o1) - pieceToValue(o2) }
+            takenWhitePieces.iterate { boardSquare, _ ->
+                if (row > 6) {
+                    row = 0
+                    column++
+                }
+                boardSquare.x = 8.6f * SQUARE_SIZE + row * 1.1f * boardSquare.sprite.width
+                boardSquare.y = 4.25f * SQUARE_SIZE - column * 1.1f * boardSquare.sprite.height
+                row++
+            }
+        } else {
+            takenBlackPieces.add(piece)
+            takenBlackPieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
+            takenBlackPieces.iterate { boardSquare, _ ->
+                if (row > 6) {
+                    row = 0
+                    column++
+                }
+                boardSquare.x = 8.6f * SQUARE_SIZE + row * 1.1f * boardSquare.sprite.width
+                boardSquare.y = 5.25f * SQUARE_SIZE - column * 1.1f * boardSquare.sprite.height
+                row++
+            }
+        }
+    }
+
+    private fun pieceToValue(piece: BoardSquare) = when (piece) {
+        is King -> 6
+        is Queen -> 5
+        is Rook -> 4
+        is Bishop -> 3
+        is Knight -> 2
+        is Pawn -> 1
+        else -> 0
+    }
+
 
     private fun normalizePosition(position: Vector2) {
         position.x = (position.x / SQUARE_SIZE).toInt() * SQUARE_SIZE
@@ -280,6 +330,11 @@ class GameBoardScreen(val game: Game) : KtxScreen {
     private fun renderPieces(batch: SpriteBatch) {
         pieces.iterate { piece, _ -> if (piece != selectedPiece) piece.draw(batch) }
         selectedPiece?.draw(batch)
+    }
+
+    private fun renderTakenPieces(batch: SpriteBatch) {
+        takenWhitePieces.iterate { piece, _ -> piece.draw(batch) }
+        takenBlackPieces.iterate { piece, _ -> piece.draw(batch) }
     }
 
     private fun renderPossibleMoves(batch: SpriteBatch) = possibleMoves.iterate { move, _ -> move.draw(batch) }
