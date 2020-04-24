@@ -136,7 +136,6 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 mouseInitialPosition.y = mousePosition.y
                 mouseInitialPosition.x = mousePosition.x
             }
-
         } else if (wasLeftMousePressed) {
             if (Gdx.input.isButtonPressed(Input.Keys.CONTROL_LEFT)) {
                 val deltaX = mouseInitialPosition.x - mousePosition.x
@@ -151,6 +150,7 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 try {
                     val move = Move(positionToSquare(selectedPieceInitialPosition), positionToSquare(position))
                     if (MoveGenerator.generateLegalMoves(validationBoard).contains(move)) {
+                        checkForCastle(move)
                         validationBoard.doMove(move)
                         turn++
                         selectedPiece?.x = position.x
@@ -175,6 +175,29 @@ class GameBoardScreen(val game: Game) : KtxScreen {
                 selectedPiece = null
             }
         }
+    }
+
+    private fun checkForCastle(move: Move): Boolean {
+        if (selectedPiece !is King) return true
+        val whiteTurn = turn % 2 != 0
+
+        return if (whiteTurn && move.from == Square.E1 && move.to == Square.G1) {
+            val moveRookTo = squareToPosition(Square.F1)
+            findPiece(squareToPosition(Square.H1))?.apply { x = moveRookTo.x; y = moveRookTo.y; }
+            false
+        } else if (whiteTurn && move.from == Square.E1 && move.to == Square.C1) {
+            val moveRookTo = squareToPosition(Square.D1)
+            findPiece(squareToPosition(Square.A1))?.apply { x = moveRookTo.x; y = moveRookTo.y; }
+            false
+        } else if (!whiteTurn && move.from == Square.E8 && move.to == Square.G8) {
+            val moveRookTo = squareToPosition(Square.F8)
+            findPiece(squareToPosition(Square.H8))?.apply { x = moveRookTo.x; y = moveRookTo.y; }
+            false
+        } else if (!whiteTurn && move.from == Square.E8 && move.to == Square.C8) {
+            val moveRookTo = squareToPosition(Square.D8)
+            findPiece(squareToPosition(Square.A8))?.apply { x = moveRookTo.x; y = moveRookTo.y; }
+            false
+        } else false
     }
 
     private fun addToTakenPieces(piece: BoardSquare) {
