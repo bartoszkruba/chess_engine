@@ -184,28 +184,23 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         if (turn % 2 == 0) {
             takenWhitePieces.add(piece)
             takenWhitePieces.sort { o1, o2 -> pieceToValue(o1) - pieceToValue(o2) }
-            takenWhitePieces.iterate { boardSquare, _ ->
-                if (row > 6) {
-                    row = 0
-                    column++
-                }
-                boardSquare.x = 8.6f * SQUARE_SIZE + row * 1.1f * boardSquare.sprite.width
-                boardSquare.y = 4.25f * SQUARE_SIZE - column * 1.1f * boardSquare.sprite.height
-                row++
-            }
         } else {
             takenBlackPieces.add(piece)
-            takenBlackPieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
-            takenBlackPieces.iterate { boardSquare, _ ->
-                if (row > 6) {
-                    row = 0
-                    column++
-                }
-                boardSquare.x = 8.6f * SQUARE_SIZE + row * 1.1f * boardSquare.sprite.width
-                boardSquare.y = 5.25f * SQUARE_SIZE - column * 1.1f * boardSquare.sprite.height
-                row++
-            }
+            takenBlackPieces.sort { o1, o2 -> pieceToValue(o1) - pieceToValue(o2) }
         }
+        val calculatePositions = { boardSquare: BoardSquare ->
+            if (row > 6) {
+                row = 0
+                column++
+            }
+            boardSquare.x = 8.6f * SQUARE_SIZE + row * 1.1f * boardSquare.sprite.width
+            boardSquare.y = 5.25f * SQUARE_SIZE - column * 1.1f * boardSquare.sprite.height
+            row++
+        }
+        takenWhitePieces.iterate { boardSquare, _ -> calculatePositions(boardSquare) }
+        row = 0
+        column++
+        takenBlackPieces.iterate { boardSquare, _ -> calculatePositions(boardSquare) }
     }
 
     private fun pieceToValue(piece: BoardSquare) = when (piece) {
