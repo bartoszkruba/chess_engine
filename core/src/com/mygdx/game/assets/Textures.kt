@@ -19,4 +19,6 @@ class Textures(assets: AssetManager) {
     val blackRook = assets[TextureAssets.BlackRook]
     val blackQueen = assets[TextureAssets.BlackQueen]
     val blackKing = assets[TextureAssets.BlackKing]
+
+    val hal9000 = assets[TextureAssets.Hal9000]
 }

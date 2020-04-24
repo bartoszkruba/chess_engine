@@ -20,7 +20,8 @@ enum class TextureAssets(val path: String) {
     BlackKnight("1x/b_knight_1x.png"),
     BlackPawn("1x/b_pawn_1x.png"),
     BlackQueen("1x/b_queen_1x.png"),
-    BlackRook("1x/b_rook_1x.png")
+    BlackRook("1x/b_rook_1x.png"),
+    Hal9000("Hal_9000.jpg")
 }
 
 inline fun AssetManager.load(asset: TextureAssets) = load<Texture>(asset.path)

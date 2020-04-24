@@ -23,7 +23,7 @@ import ktx.collections.iterate
 import ktx.graphics.use
 import org.apache.commons.lang3.time.StopWatch
 
-class GameBoardScreen(val game: Game) : KtxScreen {
+class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScreen {
 
     private val textures = Textures(game.assets)
 
@@ -69,6 +69,13 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         x = -SQUARE_SIZE
         y = -SQUARE_SIZE
         setSize(13 * SQUARE_SIZE, 10 * SQUARE_SIZE)
+    }
+
+    override fun show() {
+        super.show()
+        if (!chosenWhite) {
+            flipGameBoard()
+        }
     }
 
     override fun render(delta: Float) {

@@ -5,18 +5,18 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
-import com.mygdx.game.screen.GameBoardScreen
-import com.mygdx.game.screen.LoadingScreen
+import com.mygdx.game.screen.MenuScreen
 
 class Game : KtxGame<KtxScreen>() {
 
     val batch by lazy { SpriteBatch() }
     val font by lazy { BitmapFont().apply { data.setScale(2f) } }
     val assets by lazy { AssetManager() }
+    val aiMoveGenerator = AIMoveGenerator()
 
     override fun create() {
-        addScreen(LoadingScreen(this))
-        setScreen<LoadingScreen>()
+        addScreen(MenuScreen(this))
+        setScreen<MenuScreen>()
         super.create()
     }
 
