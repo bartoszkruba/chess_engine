@@ -206,10 +206,10 @@ class GameBoardScreen(val game: Game) : KtxScreen {
         piece.sprite.setSize(0.35f * SQUARE_SIZE, 0.35f * SQUARE_SIZE)
         if (turn % 2 == 0) {
             takenWhitePieces.add(piece)
-            takenWhitePieces.sort { o1, o2 -> pieceToValue(o1) - pieceToValue(o2) }
+            takenWhitePieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
         } else {
             takenBlackPieces.add(piece)
-            takenBlackPieces.sort { o1, o2 -> pieceToValue(o1) - pieceToValue(o2) }
+            takenBlackPieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
         }
         val calculatePositions = { boardSquare: BoardSquare ->
             if (row > 6) {
@@ -221,8 +221,10 @@ class GameBoardScreen(val game: Game) : KtxScreen {
             row++
         }
         takenWhitePieces.iterate { boardSquare, _ -> calculatePositions(boardSquare) }
-        row = 0
-        column++
+        if (takenWhitePieces.size != 0) {
+            row = 0
+            column++
+        }
         takenBlackPieces.iterate { boardSquare, _ -> calculatePositions(boardSquare) }
     }
 
