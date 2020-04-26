@@ -98,7 +98,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         setSize(1.3f * SQUARE_SIZE, 1.3f * SQUARE_SIZE)
     }
 
-    private val selectKnight = Sprite(if (chosenWhite) textures.whiteKnight else textures.blackBishop).apply {
+    private val selectKnight = Sprite(if (chosenWhite) textures.whiteKnight else textures.blackKnight).apply {
         x = 4.9f * SQUARE_SIZE + 0.75f * SQUARE_SIZE
         y = 3.3f * SQUARE_SIZE
         setSize(1.3f * SQUARE_SIZE, 1.3f * SQUARE_SIZE)
@@ -123,7 +123,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 else processControls()
             } else {
                 processControls()
-//                performAIMove()
+                performAIMove()
             }
         }
 
@@ -165,21 +165,48 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
     private fun checkForPieceSelection() = selectedPiece?.let { selectedPiece ->
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            val from = positionToSquare(selectedPieceInitialPosition)
+            val to = positionToSquare(Vector2(selectedPiece.x, selectedPiece.y))
             if (checkForMouseOverlap(selectQueen)) {
-                val from = positionToSquare(selectedPieceInitialPosition)
-                val to = positionToSquare(Vector2(selectedPiece.x, selectedPiece.y))
                 val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_QUEEN else Piece.BLACK_QUEEN)
-                findPiece(selectedPiece)?.let { pieces.removeIndex(pieces.indexOf(it)) }
-                validationBoard.doMove(move)
-                val newPiece = Queen(selectedPiece.x, selectedPiece.y, textures, false)
-                pieces.removeIndex(pieces.indexOf(selectedPiece))
-                pieces.add(newPiece)
-                this.selectedPiece = null
-                pieceSelectionOn = false
+                performPromotionMove(move, selectedPiece)
+            } else if (checkForMouseOverlap(selectRook)) {
+                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_ROOK else Piece.BLACK_ROOK)
+                performPromotionMove(move, selectedPiece)
+            } else if (checkForMouseOverlap(selectBishop)) {
+                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_BISHOP else Piece.BLACK_BISHOP)
+                performPromotionMove(move, selectedPiece)
+            } else if (checkForMouseOverlap(selectKnight)) {
+                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_KNIGHT else Piece.BLACK_KNIGHT)
+                performPromotionMove(move, selectedPiece)
             }
         }
     }
 
+    private fun performPromotionMove(move: Move, selectedPiece: BoardSquare) {
+        validationBoard.doMove(move)
+        turn++
+        findPiece(selectedPiece)?.let {
+            val index = pieces.indexOf(it)
+            addToTakenPieces(pieces[index])
+            pieces.removeIndex(index)
+        }
+        val newPiece = when (move.promotion) {
+            Piece.WHITE_QUEEN -> Queen(selectedPiece.x, selectedPiece.y, textures, false)
+            Piece.BLACK_QUEEN -> Queen(selectedPiece.x, selectedPiece.y, textures, true)
+            Piece.WHITE_ROOK -> Rook(selectedPiece.x, selectedPiece.y, textures, false)
+            Piece.BLACK_ROOK -> Rook(selectedPiece.x, selectedPiece.y, textures, true)
+            Piece.WHITE_BISHOP -> Bishop(selectedPiece.x, selectedPiece.y, textures, false)
+            Piece.BLACK_BISHOP -> Bishop(selectedPiece.x, selectedPiece.y, textures, true)
+            Piece.WHITE_KNIGHT -> Knight(selectedPiece.x, selectedPiece.y, textures, false)
+            else -> Knight(selectedPiece.x, selectedPiece.y, textures, true)
+        }
+        pieces.removeIndex(pieces.indexOf(selectedPiece))
+        pieces.add(newPiece)
+        this.selectedPiece = null
+        setGameStatus()
+        pieceSelectionOn = false
+    }
 
     private fun flipGameBoard() {
         gameBoardFlipped = !gameBoardFlipped
@@ -243,7 +270,6 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                         checkForEnPassant(move)
                         checkForCastle(move)
                         if (checkForPawnPromotion(move)) return
-                        println("Do move")
                         validationBoard.doMove(move)
                         turn++
                         findPiece(selectedPiece!!)?.let {
@@ -251,13 +277,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                             addToTakenPieces(pieces[index])
                             pieces.removeIndex(index)
                         }
-                        gameStatus = when {
-                            validationBoard.isMated -> GameStatus.CHECK_MATE
-                            validationBoard.isDraw -> GameStatus.DRAW
-                            validationBoard.isStaleMate -> GameStatus.STALE_MATE
-                            validationBoard.isKingAttacked -> GameStatus.CHECK
-                            else -> GameStatus.NONE
-                        }
+                        setGameStatus()
                     } else throw RuntimeException()
                 } catch (ex: Exception) {
                     selectedPiece?.y = selectedPieceInitialPosition.y
@@ -265,6 +285,16 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 }
                 selectedPiece = null
             }
+        }
+    }
+
+    private fun setGameStatus() {
+        gameStatus = when {
+            validationBoard.isMated -> GameStatus.CHECK_MATE
+            validationBoard.isDraw -> GameStatus.DRAW
+            validationBoard.isStaleMate -> GameStatus.STALE_MATE
+            validationBoard.isKingAttacked -> GameStatus.CHECK
+            else -> GameStatus.NONE
         }
     }
 
@@ -300,7 +330,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             Square.F8, Square.G8, Square.H8)
 
     private val blackPawnPromotionSquares = arrayListOf(Square.A1, Square.B1, Square.C1, Square.D1, Square.E1,
-            Square.F1, Square.H1)
+            Square.F1, Square.G1, Square.H1)
 
     private fun checkForPawnPromotion(move: Move): Boolean {
         if (selectedPiece !is Pawn) return false
