@@ -123,7 +123,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 else processControls()
             } else {
                 processControls()
-                performAIMove()
+//                performAIMove()
             }
         }
 
@@ -465,7 +465,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
     private fun renderStatus(batch: SpriteBatch) {
         if (gameStatus != GameStatus.NONE) {
-            val status = gameStatus.name
+            val status = gameStatus.name.replace('_', ' ')
             game.font.draw(batch, status, 9.15f * SQUARE_SIZE, 7f * SQUARE_SIZE)
         }
     }
