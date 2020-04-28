@@ -40,15 +40,15 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     private var wasLeftMousePressed: Boolean = false
     private val mousePosition = Vector2()
     private val mouseInitialPosition = Vector2()
-    private var selectedPiece: BoardSquare? = null
+    private var selectedPiece: BoardPiece? = null
     private val selectedPieceInitialPosition = Vector2()
 
     private val validationBoard = Board()
     private val board = createBoard()
     private val pieces = initializePieces()
 
-    private val takenWhitePieces = Array<BoardSquare>()
-    private val takenBlackPieces = Array<BoardSquare>()
+    private val takenWhitePieces = Array<BoardPiece>()
+    private val takenBlackPieces = Array<BoardPiece>()
     private val flipBoardButton = Sprite(textures.darkSquareTexture).apply {
         x = 9.25f * SQUARE_SIZE
         y = 5.75f * SQUARE_SIZE
@@ -183,7 +183,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         }
     }
 
-    private fun performPromotionMove(move: Move, selectedPiece: BoardSquare) {
+    private fun performPromotionMove(move: Move, selectedPiece: BoardPiece) {
         validationBoard.doMove(move)
         turn++
         findPiece(selectedPiece)?.let {
@@ -267,7 +267,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                                     .find { it.from == move.from && it.to == move.to } != null) {
                         selectedPiece?.x = position.x
                         selectedPiece?.y = position.y
-                        checkForEnPassant(move)
+                        checkForEnPassant(move, selectedPiece!!)
                         checkForCastle(move)
                         if (checkForPawnPromotion(move)) return
                         validationBoard.doMove(move)
@@ -321,8 +321,24 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         } else false
     }
 
-    private fun checkForEnPassant(move: Move): Boolean {
-        // todo implement this check
+    private fun checkForEnPassant(move: Move, selectedPiece: BoardPiece): Boolean {
+        if (selectedPiece !is Pawn) return false
+        val from = move.from.name
+        val to = move.to.name
+
+        if (from[0] != to[0] && findPiece(selectedPiece) == null) {
+            val whiteTurn = turn % 2 != 0
+            val removePieceFrom: Square
+            removePieceFrom = if (whiteTurn) {
+                Square.fromValue(to[0].toString() + (to[1].toString().toInt() - 1))
+            } else {
+                Square.fromValue(to[0].toString() + (to[1].toString().toInt() + 1))
+            }
+            val pieceToRemove = findPiece(squareToPosition(removePieceFrom))!!
+            addToTakenPieces(pieceToRemove)
+            pieces.removeIndex(pieces.indexOf(pieceToRemove))
+        }
+
         return false
     }
 
@@ -343,16 +359,16 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         return false
     }
 
-    private fun addToTakenPieces(piece: BoardSquare) {
+    private fun addToTakenPieces(piece: BoardPiece) {
         var row = 0
         var column = 0
         piece.sprite.setSize(0.35f * SQUARE_SIZE, 0.35f * SQUARE_SIZE)
-        if (turn % 2 == 0) {
-            takenWhitePieces.add(piece)
-            takenWhitePieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
-        } else {
+        if (piece.dark) {
             takenBlackPieces.add(piece)
             takenBlackPieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
+        } else {
+            takenWhitePieces.add(piece)
+            takenWhitePieces.sort { o1, o2 -> pieceToValue(o2) - pieceToValue(o1) }
         }
         val calculatePositions = { boardSquare: BoardSquare ->
             if (row > 6) {
@@ -371,7 +387,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         takenBlackPieces.iterate { boardSquare, _ -> calculatePositions(boardSquare) }
     }
 
-    private fun pieceToValue(piece: BoardSquare) = when (piece) {
+    private fun pieceToValue(piece: BoardPiece) = when (piece) {
         is King -> 6
         is Queen -> 5
         is Rook -> 4
@@ -387,12 +403,12 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         position.y = (position.y / SQUARE_SIZE).toInt() * SQUARE_SIZE
     }
 
-    private fun findPiece(position: Vector2): BoardSquare? = pieces.find { boardSquare ->
+    private fun findPiece(position: Vector2): BoardPiece? = pieces.find { boardSquare ->
         (position.x >= boardSquare.x && position.x < boardSquare.x + SQUARE_SIZE &&
                 position.y >= boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE)
     }
 
-    private fun findPiece(position: BoardSquare): BoardSquare? = pieces.find { boardSquare ->
+    private fun findPiece(position: BoardSquare): BoardPiece? = pieces.find { boardSquare ->
         (position.x >= boardSquare.x && position.x < boardSquare.x + SQUARE_SIZE &&
                 position.y >= boardSquare.y && position.y < boardSquare.y + SQUARE_SIZE) && boardSquare != position
     }
@@ -517,8 +533,8 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         return board
     }
 
-    private fun initializePieces(): Array<BoardSquare> {
-        val pieces = Array<BoardSquare>()
+    private fun initializePieces(): Array<BoardPiece> {
+        val pieces = Array<BoardPiece>()
 
         for (i in 0 until 2) {
             for (j in 0 until 8) {
