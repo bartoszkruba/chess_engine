@@ -122,8 +122,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 if (pieceSelectionOn) checkForPieceSelection()
                 else processControls()
             } else {
-                processControls()
-//                performAIMove()
+                performAIMove()
             }
         }
 
@@ -155,7 +154,38 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     }
 
     private fun performAIMove() {
+        val move = game.aiMoveGenerator.generateMove(validationBoard)
+        selectedPiece = findPiece(squareToPosition(move.from))
+        val newPosition = squareToPosition(move.to)
+        selectedPiece?.x = newPosition.x
+        selectedPiece?.y = newPosition.y
 
+        checkForEnPassant(move, selectedPiece!!)
+        checkForCastle(move)
+
+        if (selectedPiece is Pawn && ((selectedPiece!!.dark && blackPawnPromotionSquares.contains(move.to))) ||
+                (!selectedPiece!!.dark && whitePawnPromotionSquares.contains(move.to))) {
+            validationBoard.doMove(move)
+            pieces.add(when (move.promotion) {
+                Piece.WHITE_QUEEN -> Queen(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_QUEEN -> Queen(newPosition.x, newPosition.y, textures, true)
+                Piece.WHITE_ROOK -> Rook(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_ROOK -> Rook(newPosition.x, newPosition.y, textures, true)
+                Piece.WHITE_BISHOP -> Bishop(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_BISHOP -> Bishop(newPosition.x, newPosition.y, textures, true)
+                Piece.WHITE_KNIGHT -> Knight(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_KNIGHT -> Knight(newPosition.x, newPosition.y, textures, true)
+                else -> throw RuntimeException("Invalid piece promotion")
+            })
+            pieces.removeIndex(pieces.indexOf(selectedPiece))
+        } else {
+            validationBoard.doMove(move)
+        }
+        findPiece(selectedPiece!!)?.let {
+            addToTakenPieces(it)
+            pieces.removeIndex(pieces.indexOf(it))
+        }
+        turn++
     }
 
     private fun checkForMouseOverlap(sprite: Sprite): Boolean {
