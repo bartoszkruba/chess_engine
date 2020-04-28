@@ -243,9 +243,10 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                         .filter { it.from == square }
                         .map { squareToPosition(it.to) }
                         .map {
-                            if (findPiece(it) != null) PossibleMove(it.x, it.y, textures, true)
-                            else PossibleMove(it.x, it.y, textures, false)
+                            if (findPiece(it) != null) PossibleMove(it.x, it.y, textures, PossibleMove.Color.RED)
+                            else PossibleMove(it.x, it.y, textures, PossibleMove.Color.GREEN)
                         }.forEach { possibleMoves.add(it) }
+                possibleMoves.add(PossibleMove(piece.x, piece.y, textures, PossibleMove.Color.BLUE))
 
                 mouseInitialPosition.y = mousePosition.y
                 mouseInitialPosition.x = mousePosition.x
