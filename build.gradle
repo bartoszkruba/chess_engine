@@ -65,5 +65,7 @@ project(":core") {
         api "io.github.libktx:ktx-assets:$ktxVersion"
         implementation 'com.github.bhlangonijr:chesslib:1.1.13'
         compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
+        implementation "org.deeplearning4j:deeplearning4j-core:1.0.0-beta6"
+        implementation "org.nd4j:nd4j-native-platform:1.0.0-beta6"
     }
 }
