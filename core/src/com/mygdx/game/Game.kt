@@ -4,6 +4,7 @@ import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.mygdx.game.moveGenerator.AIMoveGenerator
+import com.mygdx.game.moveGenerator.MinimaxMoveGenerator
 import com.mygdx.game.moveGenerator.RandomMoveGenerator
 import com.mygdx.game.moveGenerator.ResnetVersion1MoveGenerator
 import ktx.app.KtxGame
@@ -17,7 +18,9 @@ class Game : KtxGame<KtxScreen>() {
     val batch by lazy { SpriteBatch() }
     val font by lazy { BitmapFont().apply { data.setScale(2f) } }
     val assets by lazy { AssetManager() }
-    val aiMoveGenerator: AIMoveGenerator = ResnetVersion1MoveGenerator(MODEL_1_PATH)
+
+    //    val aiMoveGenerator: AIMoveGenerator = ResnetVersion1MoveGenerator(MODEL_1_PATH)
+    val aiMoveGenerator: AIMoveGenerator = MinimaxMoveGenerator()
 
     override fun create() {
         addScreen(MenuScreen(this))
