@@ -55,6 +55,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         setSize(1.5f * SQUARE_SIZE, 0.75f * SQUARE_SIZE)
     }
 
+    private val lastMove = Array<PossibleMove>()
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
     private val stopwatch = StopWatch.createStarted()
@@ -102,7 +103,6 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         x = 4.9f * SQUARE_SIZE + 0.75f * SQUARE_SIZE
         y = 3.3f * SQUARE_SIZE
         setSize(1.3f * SQUARE_SIZE, 1.3f * SQUARE_SIZE)
-
     }
 
     override fun show() {
@@ -130,6 +130,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         game.batch.use {
             background.draw(it)
             renderBoard(it)
+            renderLastMove(it)
             renderPossibleMoves(it)
             renderBoardEnumeration(it)
             renderTakenPieces(it)
@@ -185,7 +186,9 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             addToTakenPieces(it)
             pieces.removeIndex(pieces.indexOf(it))
         }
+
         turn++
+        setLastMove(move)
     }
 
     private fun checkForMouseOverlap(sprite: Sprite): Boolean {
@@ -309,6 +312,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                             pieces.removeIndex(index)
                         }
                         setGameStatus()
+                        setLastMove(move)
                     } else throw RuntimeException()
                 } catch (ex: Exception) {
                     selectedPiece?.y = selectedPieceInitialPosition.y
@@ -388,6 +392,20 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             return true
         }
         return false
+    }
+
+    private fun setLastMove(move: Move) {
+        val fromPosition = squareToPosition(move.from)
+        val toPosition = squareToPosition(move.to)
+        if (lastMove.size == 0) {
+            lastMove.add(PossibleMove(fromPosition.x, fromPosition.y, textures, PossibleMove.Color.YELLOW));
+            lastMove.add(PossibleMove(toPosition.x, toPosition.y, textures, PossibleMove.Color.YELLOW));
+        } else {
+            lastMove[0].x = fromPosition.x
+            lastMove[0].y = fromPosition.y
+            lastMove[1].x = toPosition.x
+            lastMove[1].y = toPosition.y
+        }
     }
 
     private fun addToTakenPieces(piece: BoardPiece) {
@@ -548,6 +566,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     }
 
     private fun renderPossibleMoves(batch: SpriteBatch) = possibleMoves.iterate { move, _ -> move.draw(batch) }
+    private fun renderLastMove(batch: SpriteBatch) = lastMove.iterate { move, _ -> move.draw(batch) }
 
     private fun createBoard(): Array<BoardSquare> {
         val board = Array<BoardSquare>()

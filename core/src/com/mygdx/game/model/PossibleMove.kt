@@ -8,7 +8,7 @@ class PossibleMove(x: Float, y: Float, textures: Textures, color: Color) : Board
         x, y, Sprite(textures.lightSquareTexture)
 ) {
     enum class Color {
-        GREEN, RED, BLUE
+        GREEN, RED, BLUE, YELLOW
     }
 
     init {
@@ -16,6 +16,7 @@ class PossibleMove(x: Float, y: Float, textures: Textures, color: Color) : Board
             Color.GREEN -> Color().apply { set(0f, 255f, 0f, 0.5f) }
             Color.RED -> Color().apply { set(255f, 0f, 0f, 0.5f) }
             Color.BLUE -> Color().apply { set(0f, 0f, 255f, 0.5f) }
+            Color.YELLOW -> Color().apply { set(255f, 130f, 0f, 0.5f) }
         }
     }
 }

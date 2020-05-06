@@ -17,24 +17,25 @@ class MinimaxMoveGenerator(val depth: Int = 5) : AIMoveGenerator {
 
     override fun generateMove(board: Board) = Node(board.fen, this.depth, board.sideToMove == Side.WHITE)
             .children.map {
-                MoveValue(it.move!!, it.getValue(board.sideToMove == Side.WHITE))
+                MoveValue(it.move!!, it.getValue())
             }.shuffled().sortedWith(Comparator { p0, p1 ->
                 if (board.sideToMove != Side.WHITE) p0!!.value - p1!!.value
                 else p1!!.value - p0!!.value
             }).first().move
 
-    private class Node(val state: String, depth: Int, whiteTurn: Boolean, val move: Move? = null,
+    private class Node(val state: String, depth: Int, val whiteTurn: Boolean, val move: Move? = null,
                        val parent: Node? = null) {
         var children: Array<Node> = emptyArray()
-        private val boardValue = getValue(whiteTurn)
+        private val boardValue = getValue()
 
         init {
+            if(parent == null) total = 0
             total++
-            if (total % 10 == 0) println(total)
-            if (depth > 0 && shouldGetChildren(whiteTurn)) children = getChildren(depth, whiteTurn)
+            if (total % 10000 == 0) println(total)
+            if (depth > 0 && shouldGetChildren()) children = getChildren(depth, whiteTurn)
         }
 
-        private fun shouldGetChildren(whiteTurn: Boolean): Boolean {
+        private fun shouldGetChildren(): Boolean {
             if (parent == null) return true
             return (whiteTurn && parent.boardValue <= boardValue) ||
                     (!whiteTurn && parent.boardValue >= boardValue)
@@ -44,15 +45,15 @@ class MinimaxMoveGenerator(val depth: Int = 5) : AIMoveGenerator {
             board.loadFromFen(state)
             return MoveGenerator.generateLegalMoves(board).map {
                 board.doMove(it)
-                val node = Node(board.fen, depth - 1, whiteTurn, it, this)
+                val node = Node(board.fen, depth - 1, !whiteTurn, it, this)
                 board.loadFromFen(state)
                 node
             }.toTypedArray()
         }
 
-        fun getValue(whiteTurn: Boolean): Int {
+        fun getValue(): Int {
             return if (children.isEmpty()) boardValue
-            else children.map { it.getValue(whiteTurn) }.reduce { v1, v2 ->
+            else children.map { it.getValue() }.reduce { v1, v2 ->
                 if (whiteTurn) {
                     if (v1 > v2) return v1 else v2
                 } else {
@@ -71,7 +72,5 @@ class MinimaxMoveGenerator(val depth: Int = 5) : AIMoveGenerator {
             } * if (it.pieceSide == Side.WHITE) 1 else if (it.pieceType == null) 0 else -1
             value
         }.reduce { v1, v2 -> v1 + v2 }
-
-        private fun getBoardValue(fen: String) = getBoardValue(Board().apply { loadFromFen(fen) })
     }
 }
