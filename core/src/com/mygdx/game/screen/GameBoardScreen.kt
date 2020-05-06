@@ -250,6 +250,13 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             piece.x = newPosition.x
             piece.y = newPosition.y
         }
+
+        lastMove.iterate { lastMove, _ ->
+            val square = positionToSquare(Vector2(lastMove.x, lastMove.y), !gameBoardFlipped)
+            val newPosition = squareToPosition(square)
+            lastMove.x = newPosition.x
+            lastMove.y = newPosition.y
+        }
     }
 
     private fun checkBoardFlipControls(): Boolean {
