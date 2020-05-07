@@ -20,7 +20,7 @@ class Game : KtxGame<KtxScreen>() {
     val assets by lazy { AssetManager() }
 
     val aiMoveGenerator: AIMoveGenerator = ResnetVersion1MoveGenerator(MODEL_1_PATH)
-//    val aiMoveGenerator: AIMoveGenerator = MinimaxMoveGenerator(depth = 3)
+//    val aiMoveGenerator: AIMoveGenerator = MinimaxMoveGenerator(depth = 4)
 
     override fun create() {
         addScreen(MenuScreen(this))

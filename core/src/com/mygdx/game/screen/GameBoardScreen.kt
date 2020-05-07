@@ -21,7 +21,6 @@ import com.mygdx.game.assets.Textures
 import com.mygdx.game.model.*
 import com.mygdx.game.moveGenerator.moveIsPromotion
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ktx.app.KtxScreen
@@ -61,6 +60,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     }
 
     private var waitingForAIMove = false
+    private var aiMove: Move? = null
     private val lastMove = Array<PossibleMove>()
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
@@ -130,9 +130,9 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             if ((whiteTurn && chosenWhite) || (!whiteTurn && !chosenWhite)) {
                 if (pieceSelectionOn) checkForPieceSelection()
                 else processControls()
-            } else if (!waitingForAIMove) {
-                performAIMove()
-            }
+            } else if (!waitingForAIMove && aiMove == null)
+                queryAIMove()
+            else if (aiMove != null) performAIMove()
         }
 
         game.batch.projectionMatrix = camera.combined
@@ -160,53 +160,57 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             try {
                 renderPieces(it)
                 if (pieceSelectionOn) renderPieceSelection(it)
+                else if (waitingForAIMove) renderWaitingScreen(it)
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }
         }
     }
 
-    private fun performAIMove() {
+    private fun queryAIMove() {
         waitingForAIMove = true
         CoroutineScope(IO).launch {
-            val move = game.aiMoveGenerator.generateMove(validationBoard)
-            CoroutineScope(Default).launch {
-                selectedPiece = findPiece(squareToPosition(move.from))
-                val newPosition = squareToPosition(move.to)
-                selectedPiece?.x = newPosition.x
-                selectedPiece?.y = newPosition.y
-
-                checkForEnPassant(move, selectedPiece!!)
-                checkForCastle(move)
-
-                if (moveIsPromotion(validationBoard, move)) {
-                    pieces.add(when (move.promotion) {
-                        Piece.WHITE_QUEEN -> Queen(newPosition.x, newPosition.y, textures, false)
-                        Piece.BLACK_QUEEN -> Queen(newPosition.x, newPosition.y, textures, true)
-                        Piece.WHITE_ROOK -> Rook(newPosition.x, newPosition.y, textures, false)
-                        Piece.BLACK_ROOK -> Rook(newPosition.x, newPosition.y, textures, true)
-                        Piece.WHITE_BISHOP -> Bishop(newPosition.x, newPosition.y, textures, false)
-                        Piece.BLACK_BISHOP -> Bishop(newPosition.x, newPosition.y, textures, true)
-                        Piece.WHITE_KNIGHT -> Knight(newPosition.x, newPosition.y, textures, false)
-                        Piece.BLACK_KNIGHT -> Knight(newPosition.x, newPosition.y, textures, true)
-                        else -> throw RuntimeException("Invalid piece promotion")
-                    })
-                    pieces.removeIndex(pieces.indexOf(selectedPiece))
-                }
-
-                validationBoard.doMove(move)
-                findPiece(selectedPiece!!)?.let {
-                    addToTakenPieces(it)
-                    pieces.removeIndex(pieces.indexOf(it))
-                }
-
-                turn++
-                setLastMove(move)
-                setGameStatus()
-                selectedPiece = null
-                waitingForAIMove = false
-            }
+            aiMove = game.aiMoveGenerator.generateMove(validationBoard)
+            waitingForAIMove = false
         }
+    }
+
+    private fun performAIMove() {
+        val move = aiMove!!
+        selectedPiece = findPiece(squareToPosition(move.from))
+        val newPosition = squareToPosition(move.to)
+        selectedPiece?.x = newPosition.x
+        selectedPiece?.y = newPosition.y
+
+        checkForEnPassant(move, selectedPiece!!)
+        checkForCastle(move)
+
+        if (moveIsPromotion(validationBoard, move)) {
+            pieces.add(when (move.promotion) {
+                Piece.WHITE_QUEEN -> Queen(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_QUEEN -> Queen(newPosition.x, newPosition.y, textures, true)
+                Piece.WHITE_ROOK -> Rook(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_ROOK -> Rook(newPosition.x, newPosition.y, textures, true)
+                Piece.WHITE_BISHOP -> Bishop(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_BISHOP -> Bishop(newPosition.x, newPosition.y, textures, true)
+                Piece.WHITE_KNIGHT -> Knight(newPosition.x, newPosition.y, textures, false)
+                Piece.BLACK_KNIGHT -> Knight(newPosition.x, newPosition.y, textures, true)
+                else -> throw RuntimeException("Invalid piece promotion")
+            })
+            pieces.removeIndex(pieces.indexOf(selectedPiece))
+        }
+
+        validationBoard.doMove(move)
+        findPiece(selectedPiece!!)?.let {
+            addToTakenPieces(it)
+            pieces.removeIndex(pieces.indexOf(it))
+        }
+
+        turn++
+        setLastMove(move)
+        setGameStatus()
+        aiMove = null
+        selectedPiece = null
     }
 
     private fun checkForMouseOverlap(sprite: Sprite): Boolean {
@@ -566,6 +570,11 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     private fun renderPieces(batch: SpriteBatch) {
         pieces.iterate { piece, _ -> if (piece != selectedPiece) piece.draw(batch) }
         selectedPiece?.draw(batch)
+    }
+
+    private fun renderWaitingScreen(batch: SpriteBatch) {
+        darkenGameBoard.draw(batch)
+        game.font.draw(batch, "Waiting . . . ", 3.5f * SQUARE_SIZE, 4.15f * SQUARE_SIZE)
     }
 
     private fun renderPieceSelection(batch: SpriteBatch) {
