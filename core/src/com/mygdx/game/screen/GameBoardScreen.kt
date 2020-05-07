@@ -67,6 +67,11 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     private val lastMove = Array<PossibleMove>()
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
+        set(value) {
+            field = value
+            whiteTurn = value % 2 != 0
+        }
+    private var whiteTurn = true
     private val stopwatch = StopWatch.createStarted()
     private var gameStatus = GameStatus.NONE
     private var gameBoardFlipped = false
@@ -123,8 +128,6 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
     override fun render(delta: Float) {
         getMousePosInGameWorld()
-
-        val whiteTurn = turn % 2 != 0
 
         if (!checkBoardFlipControls() && (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK)) {
             if ((whiteTurn && chosenWhite) || (!whiteTurn && !chosenWhite)) {
@@ -201,6 +204,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
                 turn++
                 setLastMove(move)
+                setGameStatus()
                 waitingForAIMove = false
             }
         }
@@ -215,19 +219,14 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             val from = positionToSquare(selectedPieceInitialPosition)
             val to = positionToSquare(Vector2(selectedPiece.x, selectedPiece.y))
-            if (checkForMouseOverlap(selectQueen)) {
-                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_QUEEN else Piece.BLACK_QUEEN)
-                performPromotionMove(move, selectedPiece)
-            } else if (checkForMouseOverlap(selectRook)) {
-                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_ROOK else Piece.BLACK_ROOK)
-                performPromotionMove(move, selectedPiece)
-            } else if (checkForMouseOverlap(selectBishop)) {
-                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_BISHOP else Piece.BLACK_BISHOP)
-                performPromotionMove(move, selectedPiece)
-            } else if (checkForMouseOverlap(selectKnight)) {
-                val move = Move(from, to, if (turn % 2 != 0) Piece.WHITE_KNIGHT else Piece.BLACK_KNIGHT)
-                performPromotionMove(move, selectedPiece)
-            }
+
+            when {
+                checkForMouseOverlap(selectQueen) -> if (whiteTurn) Piece.WHITE_QUEEN else Piece.BLACK_QUEEN
+                checkForMouseOverlap(selectRook) -> if (whiteTurn) Piece.WHITE_ROOK else Piece.BLACK_ROOK
+                checkForMouseOverlap(selectBishop) -> if (whiteTurn) Piece.WHITE_BISHOP else Piece.BLACK_BISHOP
+                checkForMouseOverlap(selectKnight) -> if (whiteTurn) Piece.WHITE_KNIGHT else Piece.BLACK_KNIGHT
+                else -> null
+            }?.let { performPromotionMove(Move(from, to, it), selectedPiece) }
         }
     }
 
@@ -357,7 +356,6 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
     private fun checkForCastle(move: Move): Boolean {
         if (selectedPiece !is King) return true
-        val whiteTurn = turn % 2 != 0
 
         return if (whiteTurn && move.from == Square.E1 && move.to == Square.G1) {
             val moveRookTo = squareToPosition(Square.F1)
@@ -384,7 +382,6 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         val to = move.to.name
 
         if (from[0] != to[0] && findPiece(selectedPiece) == null) {
-            val whiteTurn = turn % 2 != 0
             val removePieceFrom: Square
             removePieceFrom = if (whiteTurn) {
                 Square.fromValue(to[0].toString() + (to[1].toString().toInt() - 1))
@@ -408,8 +405,8 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     private fun checkForPawnPromotion(move: Move): Boolean {
         if (selectedPiece !is Pawn) return false
 
-        if ((turn % 2 != 0 && whitePawnPromotionSquares.contains(move.to)) ||
-                (turn % 2 == 0 && blackPawnPromotionSquares.contains(move.to))) {
+        if ((whiteTurn && whitePawnPromotionSquares.contains(move.to)) ||
+                (!whiteTurn && blackPawnPromotionSquares.contains(move.to))) {
             pieceSelectionOn = true
             return true
         }
@@ -533,8 +530,8 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
     private fun renderTurnColor(batch: SpriteBatch) {
         shapeRenderer.projectionMatrix = batch.projectionMatrix
-        if (turn % 2 == 0) shapeRenderer.color = Color.BLACK
-        else shapeRenderer.color = Color.WHITE
+
+        shapeRenderer.color = if (whiteTurn) Color.WHITE else Color.BLACK
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
         shapeRenderer.rectLine(8.75f * SQUARE_SIZE, 7.9f * SQUARE_SIZE, 9f * SQUARE_SIZE,
                 7.9f * SQUARE_SIZE, 30f)
