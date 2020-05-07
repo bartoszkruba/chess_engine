@@ -142,29 +142,32 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         }
 
         game.batch.projectionMatrix = camera.combined
+
         game.batch.use {
-            background.draw(it)
-            renderBoard(it)
-            renderLastMove(it)
-            renderPossibleMoves(it)
-            renderBoardEnumeration(it)
-            renderTakenPieces(it)
-            renderTurnCounter(it)
-            renderTime(it)
-            renderStatus(it)
-            flipBoardButton.draw(it)
-            game.font.draw(it, "Flip Board", 9.5f * SQUARE_SIZE, 6.25f * SQUARE_SIZE)
+            try {
+                background.draw(it)
+                renderBoard(it)
+                renderLastMove(it)
+                renderPossibleMoves(it)
+                renderBoardEnumeration(it)
+                renderTakenPieces(it)
+                renderTurnCounter(it)
+                renderTime(it)
+                renderStatus(it)
+                flipBoardButton.draw(it)
+                game.font.draw(it, "Flip Board", 9.5f * SQUARE_SIZE, 6.25f * SQUARE_SIZE)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
         }
         renderBoardBoundary(game.batch)
         renderTurnColor(game.batch)
         game.batch.use {
-            renderPieces(it)
-            if (pieceSelectionOn) {
-                darkenGameBoard.draw(it)
-                selectQueen.draw(it)
-                selectRook.draw(it)
-                selectBishop.draw(it)
-                selectKnight.draw(it)
+            try {
+                renderPieces(it)
+                if (pieceSelectionOn) renderPieceSelection(it)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
         }
     }
@@ -570,6 +573,14 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     private fun renderPieces(batch: SpriteBatch) {
         pieces.iterate { piece, _ -> if (piece != selectedPiece) piece.draw(batch) }
         selectedPiece?.draw(batch)
+    }
+
+    private fun renderPieceSelection(batch: SpriteBatch) {
+        darkenGameBoard.draw(batch)
+        selectQueen.draw(batch)
+        selectRook.draw(batch)
+        selectBishop.draw(batch)
+        selectKnight.draw(batch)
     }
 
     private fun renderTakenPieces(batch: SpriteBatch) {
