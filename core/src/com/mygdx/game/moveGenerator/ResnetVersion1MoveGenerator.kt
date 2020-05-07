@@ -2,6 +2,7 @@ package com.mygdx.game.moveGenerator
 
 import com.github.bhlangonijr.chesslib.Board
 import com.github.bhlangonijr.chesslib.Piece
+import com.github.bhlangonijr.chesslib.Side
 import com.github.bhlangonijr.chesslib.Square
 import com.github.bhlangonijr.chesslib.move.Move
 import com.github.bhlangonijr.chesslib.move.MoveGenerator
@@ -52,7 +53,11 @@ class ResnetVersion1MoveGenerator(modelPath: String) : AIMoveGenerator {
             probabilities.add(MoveProbability(it, probability * 100))
         }
         probabilities.sortWith(compareByDescending { it.probability })
-        return probabilities.first().move
+
+        val move = probabilities.first().move
+        if (moveIsPromotion(board, move))
+            return Move(move.from, move.to, if (board.sideToMove == Side.WHITE) Piece.WHITE_QUEEN else Piece.BLACK_QUEEN)
+        return move
     }
 
     private fun boardToRepresentation(board: Board): INDArray {

@@ -1,6 +1,7 @@
 package com.mygdx.game.moveGenerator
 
 import com.github.bhlangonijr.chesslib.Board
+import com.github.bhlangonijr.chesslib.Piece
 import com.github.bhlangonijr.chesslib.PieceType
 import com.github.bhlangonijr.chesslib.Side
 import com.github.bhlangonijr.chesslib.move.Move
@@ -15,13 +16,18 @@ class MinimaxMoveGenerator(val depth: Int = 5) : AIMoveGenerator {
         private val board = Board()
     }
 
-    override fun generateMove(board: Board) = Node(board.fen, this.depth, board.sideToMove == Side.WHITE)
-            .children.map {
-                MoveValue(it.move!!, it.getValue())
-            }.shuffled().sortedWith(Comparator { p0, p1 ->
-                if (board.sideToMove != Side.WHITE) p0!!.value - p1!!.value
-                else p1!!.value - p0!!.value
-            }).first().move
+    override fun generateMove(board: Board): Move {
+        val move = Node(board.fen, this.depth, board.sideToMove == Side.WHITE)
+                .children.map {
+                    MoveValue(it.move!!, it.getValue())
+                }.shuffled().sortedWith(Comparator { p0, p1 ->
+                    if (board.sideToMove != Side.WHITE) p0!!.value - p1!!.value
+                    else p1!!.value - p0!!.value
+                }).first().move
+        if (moveIsPromotion(board, move))
+            return Move(move.from, move.to, if (board.sideToMove == Side.WHITE) Piece.WHITE_QUEEN else Piece.BLACK_QUEEN)
+        return move
+    }
 
     private class Node(val state: String, depth: Int, val whiteTurn: Boolean, val move: Move? = null,
                        val parent: Node? = null) {
@@ -29,7 +35,7 @@ class MinimaxMoveGenerator(val depth: Int = 5) : AIMoveGenerator {
         private val boardValue = getValue()
 
         init {
-            if(parent == null) total = 0
+            if (parent == null) total = 0
             total++
             if (total % 10000 == 0) println(total)
             if (depth > 0 && shouldGetChildren()) children = getChildren(depth, whiteTurn)

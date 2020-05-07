@@ -19,6 +19,9 @@ import com.mygdx.game.Game
 import com.mygdx.game.SQUARE_SIZE
 import com.mygdx.game.assets.Textures
 import com.mygdx.game.model.*
+import com.mygdx.game.moveGenerator.blackPawnPromotionSquares
+import com.mygdx.game.moveGenerator.moveIsPromotion
+import com.mygdx.game.moveGenerator.whitePawnPromotionSquares
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Default
@@ -396,21 +399,11 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         return false
     }
 
-    private val whitePawnPromotionSquares = arrayListOf(Square.A8, Square.B8, Square.C8, Square.D8, Square.E8,
-            Square.F8, Square.G8, Square.H8)
-
-    private val blackPawnPromotionSquares = arrayListOf(Square.A1, Square.B1, Square.C1, Square.D1, Square.E1,
-            Square.F1, Square.G1, Square.H1)
-
     private fun checkForPawnPromotion(move: Move): Boolean {
-        if (selectedPiece !is Pawn) return false
-
-        if ((whiteTurn && whitePawnPromotionSquares.contains(move.to)) ||
-                (!whiteTurn && blackPawnPromotionSquares.contains(move.to))) {
+        return if (moveIsPromotion(validationBoard, move)) {
             pieceSelectionOn = true
-            return true
-        }
-        return false
+            true
+        } else false
     }
 
     private fun setLastMove(move: Move) {
