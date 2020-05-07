@@ -351,6 +351,9 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
             validationBoard.isKingAttacked -> GameStatus.CHECK
             else -> GameStatus.NONE
         }
+
+        if (gameStatus == GameStatus.CHECK_MATE || gameStatus == GameStatus.DRAW || gameStatus == GameStatus.STALE_MATE)
+            stopwatch.stop()
     }
 
     private fun checkForCastle(move: Move): Boolean {
