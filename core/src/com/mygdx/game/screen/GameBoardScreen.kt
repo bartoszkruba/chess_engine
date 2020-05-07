@@ -19,21 +19,15 @@ import com.mygdx.game.Game
 import com.mygdx.game.SQUARE_SIZE
 import com.mygdx.game.assets.Textures
 import com.mygdx.game.model.*
-import com.mygdx.game.moveGenerator.blackPawnPromotionSquares
 import com.mygdx.game.moveGenerator.moveIsPromotion
-import com.mygdx.game.moveGenerator.whitePawnPromotionSquares
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ktx.app.KtxScreen
 import ktx.collections.iterate
 import ktx.graphics.use
 import org.apache.commons.lang3.time.StopWatch
-import kotlin.coroutines.CoroutineContext
 
 class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScreen {
 
@@ -185,9 +179,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 checkForEnPassant(move, selectedPiece!!)
                 checkForCastle(move)
 
-                if (selectedPiece is Pawn && ((selectedPiece!!.dark && blackPawnPromotionSquares.contains(move.to))) ||
-                        (!selectedPiece!!.dark && whitePawnPromotionSquares.contains(move.to))) {
-                    validationBoard.doMove(move)
+                if (moveIsPromotion(validationBoard, move)) {
                     pieces.add(when (move.promotion) {
                         Piece.WHITE_QUEEN -> Queen(newPosition.x, newPosition.y, textures, false)
                         Piece.BLACK_QUEEN -> Queen(newPosition.x, newPosition.y, textures, true)
@@ -200,9 +192,9 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                         else -> throw RuntimeException("Invalid piece promotion")
                     })
                     pieces.removeIndex(pieces.indexOf(selectedPiece))
-                } else {
-                    validationBoard.doMove(move)
                 }
+
+                validationBoard.doMove(move)
                 findPiece(selectedPiece!!)?.let {
                     addToTakenPieces(it)
                     pieces.removeIndex(pieces.indexOf(it))
@@ -211,6 +203,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 turn++
                 setLastMove(move)
                 setGameStatus()
+                selectedPiece = null
                 waitingForAIMove = false
             }
         }
@@ -388,13 +381,10 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         val to = move.to.name
 
         if (from[0] != to[0] && findPiece(selectedPiece) == null) {
-            val removePieceFrom: Square
-            removePieceFrom = if (whiteTurn) {
-                Square.fromValue(to[0].toString() + (to[1].toString().toInt() - 1))
-            } else {
-                Square.fromValue(to[0].toString() + (to[1].toString().toInt() + 1))
-            }
-            val pieceToRemove = findPiece(squareToPosition(removePieceFrom))!!
+            val pieceToRemove = findPiece(squareToPosition(
+                    if (whiteTurn) Square.fromValue(to[0].toString() + (to[1].toString().toInt() - 1))
+                    else Square.fromValue(to[0].toString() + (to[1].toString().toInt() + 1)))
+            )!!
             addToTakenPieces(pieceToRemove)
             pieces.removeIndex(pieces.indexOf(pieceToRemove))
         }
@@ -413,8 +403,8 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         val fromPosition = squareToPosition(move.from)
         val toPosition = squareToPosition(move.to)
         if (lastMove.size == 0) {
-            lastMove.add(PossibleMove(fromPosition.x, fromPosition.y, textures, PossibleMove.Color.YELLOW));
-            lastMove.add(PossibleMove(toPosition.x, toPosition.y, textures, PossibleMove.Color.YELLOW));
+            lastMove.add(PossibleMove(fromPosition.x, fromPosition.y, textures, PossibleMove.Color.YELLOW))
+            lastMove.add(PossibleMove(toPosition.x, toPosition.y, textures, PossibleMove.Color.YELLOW))
         } else {
             lastMove[0].x = fromPosition.x
             lastMove[0].y = fromPosition.y
