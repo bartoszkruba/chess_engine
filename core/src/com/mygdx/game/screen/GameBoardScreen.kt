@@ -3,13 +3,20 @@ package com.mygdx.game.screen
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.List
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
+import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.utils.Array
+import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.github.bhlangonijr.chesslib.Board
 import com.github.bhlangonijr.chesslib.Piece
 import com.github.bhlangonijr.chesslib.Square
@@ -61,6 +68,11 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
 
     private var waitingForAIMove = false
     private var aiMove: Move? = null
+    private val moveHistory by lazy {
+        val atlas = TextureAtlas(Gdx.files.internal("list_skin/skin.atlas"))
+        val skin = Skin(Gdx.files.internal("list_skin/skin.json"), atlas)
+        List<String>(skin).apply { this.setItems("Test1", "Test2", "Test3", "Test4") }
+    }
     private val lastMove = Array<PossibleMove>()
     private val possibleMoves = Array<PossibleMove>()
     private var turn = 1
@@ -116,14 +128,31 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         setSize(1.3f * SQUARE_SIZE, 1.3f * SQUARE_SIZE)
     }
 
+    private val stage by lazy {
+        Stage(StretchViewport(12 * SQUARE_SIZE * 0.75f, 9 * SQUARE_SIZE * 0.75f))
+    }
+
     override fun show() {
         super.show()
         if (!chosenWhite) {
             flipGameBoard()
         }
+
+        val scrollPane = ScrollPane(moveHistory)
+        scrollPane.setBounds(0f, 0f, 200f, 200f)
+        scrollPane.setSmoothScrolling(false)
+        scrollPane.setPosition(4 * SQUARE_SIZE, 4 * SQUARE_SIZE)
+        scrollPane.isTransform = true
+        scrollPane.setScale(0.5f)
+        stage.addActor(scrollPane)
+        Gdx.input.inputProcessor = stage
     }
 
     override fun render(delta: Float) {
+        Gdx.gl.glClearColor(1f, 1f, 1f, 1f)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+
         getMousePosInGameWorld()
 
         if (!checkBoardFlipControls() && (gameStatus == GameStatus.NONE || gameStatus == GameStatus.CHECK)) {
@@ -165,6 +194,9 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 ex.printStackTrace()
             }
         }
+
+        stage.act(delta)
+        stage.draw()
     }
 
     private fun queryAIMove() {
