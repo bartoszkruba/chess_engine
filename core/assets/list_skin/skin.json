@@ -14,15 +14,15 @@
     checkedOver: { r: 0.4, g: 0, b: 0, a: 1 },
     disabled: { r: 0.4, g: 0.4, b: 0.4, a: 1 },
     background: { r: 0.2, g: 0.2, b: 0.2, a: 1 },
-    selection: { r: 0.3, g: 0, b: 0, a: 1 },
+    selection: { r: 0.3, g: 0, b: 0, a: 0 },
     semiTransparent: { r: 0, g: 0, b: 0, a: 0.6 },
 
-    font: white
-    fontOver: white
-    fontDown: gray
-    fontChecked: white
-    fontCheckedOver: white
-    fontDisabled: gray
+    font: black
+    fontOver: black
+    fontDown: black
+    fontChecked: black
+    fontCheckedOver: black
+    fontDisabled: black
   },
   com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
     buttonUp: { name: rect, color: up },

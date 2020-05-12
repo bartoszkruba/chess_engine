@@ -71,7 +71,12 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
     private val moveHistory by lazy {
         val atlas = TextureAtlas(Gdx.files.internal("list_skin/skin.atlas"))
         val skin = Skin(Gdx.files.internal("list_skin/skin.json"), atlas)
-        List<String>(skin).apply { this.setItems("Test1", "Test2", "Test3", "Test4") }
+        skin.get(List.ListStyle::class.java).selection.topHeight = 7f
+        List<String>(skin).apply {
+            this.setItems("Test1", "Test2", "Test3", "Test4", "Test5", "Test6", "Test7", "Test8", "Test9", "Test10",
+                    "Test11", "Test12", "Test13", "Test14", "Test15", "Test16", "Test17", "Test18", "Test19", "Test20",
+                    "Test21", "Test22", "Test23", "Test24")
+        }
     }
     private val lastMove = Array<PossibleMove>()
     private val possibleMoves = Array<PossibleMove>()
@@ -139,11 +144,12 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         }
 
         val scrollPane = ScrollPane(moveHistory)
-        scrollPane.setBounds(0f, 0f, 200f, 200f)
+        scrollPane.setBounds(0f, 0f, 150f, 220f)
         scrollPane.setSmoothScrolling(false)
-        scrollPane.setPosition(4 * SQUARE_SIZE, 4 * SQUARE_SIZE)
+        scrollPane.setPosition(6.9f * SQUARE_SIZE, 0.3f * SQUARE_SIZE)
         scrollPane.isTransform = true
-        scrollPane.setScale(0.5f)
+        scrollPane.setScale(1.5f)
+        scrollPane.scrollTo(9999f, 9999f, 150f, 340f)
         stage.addActor(scrollPane)
         Gdx.input.inputProcessor = stage
     }
