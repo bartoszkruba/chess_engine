@@ -73,9 +73,9 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         val skin = Skin(Gdx.files.internal("list_skin/skin.json"), atlas)
         skin.get(List.ListStyle::class.java).selection.topHeight = 7f
         List<String>(skin).apply {
-            this.setItems("Test1", "Test2", "Test3", "Test4", "Test5", "Test6", "Test7", "Test8", "Test9", "Test10",
-                    "Test11", "Test12", "Test13", "Test14", "Test15", "Test16", "Test17", "Test18", "Test19", "Test20",
-                    "Test21", "Test22", "Test23", "Test24")
+            this.setItems("A1 - A2", "C4 - F6", "G3 - G7", "A1 - A2", "C4 - F6", "G3 - G7", "A1 - A2", "C4 - F6", "G3 - G7",
+                    "A1 - A2", "C4 - F6", "G3 - G7", "A1 - A2", "C4 - F6", "G3 - G7", "A1 - A2", "C4 - F6", "G3 - G7",
+                    "A1 - A2", "C4 - F6", "G3 - G7")
         }
     }
     private val lastMove = Array<PossibleMove>()
@@ -133,9 +133,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         setSize(1.3f * SQUARE_SIZE, 1.3f * SQUARE_SIZE)
     }
 
-    private val stage by lazy {
-        Stage(StretchViewport(12 * SQUARE_SIZE * 0.75f, 9 * SQUARE_SIZE * 0.75f))
-    }
+    private val stage by lazy { Stage(StretchViewport(12 * SQUARE_SIZE * 0.75f, 9 * SQUARE_SIZE * 0.75f)) }
 
     override fun show() {
         super.show()
@@ -144,12 +142,12 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         }
 
         val scrollPane = ScrollPane(moveHistory)
-        scrollPane.setBounds(0f, 0f, 150f, 220f)
+        scrollPane.setBounds(0f, 0f, 150f, 230f)
         scrollPane.setSmoothScrolling(false)
-        scrollPane.setPosition(6.9f * SQUARE_SIZE, 0.3f * SQUARE_SIZE)
+        scrollPane.setPosition(6.9f * SQUARE_SIZE, 0.5f)
         scrollPane.isTransform = true
         scrollPane.setScale(1.5f)
-        scrollPane.scrollTo(9999f, 9999f, 150f, 340f)
+        scrollPane.scrollTo(9999f, -99999f, 150f, 340f)
         stage.addActor(scrollPane)
         Gdx.input.inputProcessor = stage
     }
@@ -191,6 +189,7 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
         }
         renderBoardBoundary(game.batch)
         renderTurnColor(game.batch)
+        renderMoveLog(game.batch, delta)
         game.batch.use {
             try {
                 renderPieces(it)
@@ -200,9 +199,6 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 ex.printStackTrace()
             }
         }
-
-        stage.act(delta)
-        stage.draw()
     }
 
     private fun queryAIMove() {
@@ -557,6 +553,19 @@ class GameBoardScreen(val game: Game, private val chosenWhite: Boolean) : KtxScr
                 8 * SQUARE_SIZE + SQUARE_SIZE / 2f, 8 * SQUARE_SIZE + SQUARE_SIZE / 2f, 8f)
 
         shapeRenderer.end()
+    }
+
+    private fun renderMoveLog(batch: SpriteBatch, delta: Float) {
+        shapeRenderer.projectionMatrix = batch.projectionMatrix
+        shapeRenderer.color = Color.WHITE
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
+        shapeRenderer.rect(8.55f * SQUARE_SIZE, -0.5f * SQUARE_SIZE, 3f * SQUARE_SIZE, 3.85f * SQUARE_SIZE)
+        shapeRenderer.color = Color.BLACK
+        shapeRenderer.rectLine(8.5f * SQUARE_SIZE, 3.35f * SQUARE_SIZE, 13 * SQUARE_SIZE, 3.35f * SQUARE_SIZE, 10f)
+        shapeRenderer.end()
+
+        stage.act(delta)
+        stage.draw()
     }
 
     private fun renderTurnColor(batch: SpriteBatch) {
